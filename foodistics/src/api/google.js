@@ -1,55 +1,55 @@
-import Axios from 'axios'
-
+import loadGoogleMapsApi from 'load-google-maps-api';
 const API_KEY = 'AIzaSyC56u6DH0i0eCW4YhU1awRxP0PE46UZUVk';
-const CORS_URL = 'https://cors-anywhere.herokuapp.com/';
-const ROOT_URL = 'https://maps.googleapis.com';
 
-// Returns a list of open places within the specified location and radius
-const getPlaces = async (location, radius) => {
-  const path = '/maps/api/place/nearbysearch/json';
-  let res = await Axios({
-    method: 'get',
-    url: `${CORS_URL}${ROOT_URL}${path}`,
-    params: {
-      key: API_KEY,
-      opennow: true,
-      location: `${location.latitude},${location.longitude}`,
+// Loads and returns the Google Maps service instance when loaded
+const getGoogleMapsService = async () => {
+  return await loadGoogleMapsApi({ key: API_KEY, libraries: ['places'] })
+};
+
+// Retrieves nearby restaurants from the google_maps_service using provided location and radius
+const getNearbyRestaurants = async (google_maps_service, location, radius) => {
+  return new Promise((resolve, reject) => {
+    const places_service = new google_maps_service.places.PlacesService(document.createElement('div'));
+    const params = {
+      location: new google_maps_service.LatLng(location.latitude, location.longitude),
       radius,
-      type: 'restaurant',
-    },
+      openNow: true,
+      type: ['restaurant'],
+    };
+    places_service.nearbySearch(params, (results) => {
+      resolve(results);
+    });
   });
-  return res.data;
 }
 
-// Returns place details for the specified place
-const getPlaceDetails = async (place_id) => {
-  const path = '/maps/api/place/details/json';
-  let res = await Axios({
-    method: 'get',
-    url: `${CORS_URL}${ROOT_URL}${path}`,
-    params: {
-      key: API_KEY,
-      place_id,
-      fields: 'photo,name,formatted_address,geometry',
-    },
+// Retrieves relevant Place Details from the given place_id using the provided google_maps_service 
+const getPlaceDetails = async (google_maps_service, place_id) => {
+  return new Promise((resolve, reject) => {
+    const places_service = new google_maps_service.places.PlacesService(document.createElement('div'));
+    const params = {
+      placeId: place_id,
+      fields: ['name', 'rating', 'formatted_address', 'photo'],
+    };
+    places_service.getDetails(params, (result) => {
+      resolve(result);
+    });
   });
-  return res.data;
-}
+};
 
-// Returns the photo associated with the photo_reference
-const getPhoto = async (photo_reference, size) => {
-  const path = '/maps/api/place/photo';
-  let res = await Axios({
-    method: 'get',
-    url: `${CORS_URL}${ROOT_URL}${path}`,
-    params: {
-      key: API_KEY,
-      photo_reference,
-      maxheight: size,
-      maxwidth: size,
-    },
+// Retrieves a DirectionsResult object from origin to destination using the provided google_maps_service
+const getDirections = async (google_maps_service, origin, destination) => {
+  return new Promise((resolve, reject) => {
+    const directions_service = new google_maps_service.DirectionsService();
+    origin = new google_maps_service.LatLng(origin.latitude, origin.longitude);
+    const params = {
+      origin,
+      destination,
+      travelMode: 'WALKING',
+    };
+    directions_service.route(params, (result) => {
+      resolve(result);
+    });
   });
-  return res.data;
-}
+};
 
-export { getPlaces, getPlaceDetails, getPhoto };
+export { getGoogleMapsService, getNearbyRestaurants, getPlaceDetails, getDirections };

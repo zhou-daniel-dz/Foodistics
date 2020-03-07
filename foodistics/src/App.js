@@ -1,10 +1,10 @@
-import React from 'react';
-import Main from './screens/Main';
+import React, { Component } from 'react'
+import Main from './screens/Main'
 
-function App () {
-  return (
-    <Main />
-  );
-};
+class App extends Component {
+  render () {
+    return <Main />;
+  }
+}
 
 export default App;

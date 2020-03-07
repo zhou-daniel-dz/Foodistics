@@ -1,42 +1,51 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { getLocation } from '../api/geolocator';
-import { getPlaces, getPlaceDetails, getPhoto } from '../api/google';
+import { getGoogleMapsService, getNearbyRestaurants, getPlaceDetails, getDirections } from '../api/google';
 
-class Main extends React.Component {
+class Main extends Component {
   constructor(props) {
     super(props);
+    // this.getTopPlacesInformation();
   }
 
   getTopPlacesInformation = async () => {
     let location = await getLocation();
-    let placeList = await getPlaces(location.coords, 1000);
+    let google_maps_service = await getGoogleMapsService();
+    let nearby_restaurants = await getNearbyRestaurants(google_maps_service, location.coords, '1000');
 
-    // Sort the places by rating
-    let rankedPlaces = placeList.results.sort((a, b) => {
-      if (a.rating <= b.rating) {
-        return 1;
+    // Sort the nearby restauraunts by rating
+    nearby_restaurants = nearby_restaurants.sort(
+      (a, b) => {
+        if (a.rating <= b.rating) {
+          return 1;
+        }
+        return -1;
       }
-      return -1;
-    });
+    );
 
-    let max_places = 8;
-    let topPlacesInformation = [];
-    for (const place of rankedPlaces) {
-      if (max_places <= 0) {
-        break;
+    // Pull maximum 8 entries
+    let max_restaurants = 8;
+    let nearby_restaurant_info = [];
+    nearby_restaurants.forEach((
+      restaurant => {
+        if (max_restaurants <= 0) {
+          return;
+        }
+        nearby_restaurant_info.push(restaurant);
+        max_restaurants -= 1;
       }
-      const placeInformation = await getPlaceDetails(place.place_id);
-      topPlacesInformation.push(placeInformation.result);
-      max_places -= 1;
-    }
-    let testPhoto = await getPhoto(topPlacesInformation[0].photos[0].photo_reference, 500);
-    console.log(topPlacesInformation);
-    console.log(testPhoto);
+    ));
+
+    // Retrieve relevant information for only the top 8 ranked entries
+    nearby_restaurant_info = await Promise.all(nearby_restaurant_info.map(basic_data => {
+      return getPlaceDetails(google_maps_service, basic_data.place_id);
+    }));
   }
 
   render() {
-    this.getTopPlacesInformation();
-    return <h1>Hello, World</h1>;
+    return <div>
+      <h1>Hello, World</h1>
+    </div>;
   }
 }
 
