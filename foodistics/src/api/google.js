@@ -28,7 +28,7 @@ const getPlaceDetails = async (google_maps_service, place_id) => {
     const places_service = new google_maps_service.places.PlacesService(document.createElement('div'));
     const params = {
       placeId: place_id,
-      fields: ['name', 'rating', 'formatted_address', 'photo'],
+      fields: ['name', 'rating', 'formatted_address', 'photo', 'place_id'],
     };
     places_service.getDetails(params, (result) => {
       resolve(result);
