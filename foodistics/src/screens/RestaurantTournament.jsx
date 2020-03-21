@@ -47,7 +47,7 @@ class RestaurantTournament extends Component {
       this.setState({
         round: round + 1,
         index: 0,
-        nearby_restaurants: shuffle(nearby_restaurants)
+        nearby_restaurants: nearby_restaurants.length <= 2 ? nearby_restaurants : shuffle(nearby_restaurants),
       },
         () => this.loadPhotos(),
       );
@@ -76,7 +76,7 @@ class RestaurantTournament extends Component {
     new_nearby_restaurants.splice(selected === 1 ? index : index + 1, 1);
     if (nearby_restaurants.length === 2) {
       this.setState({
-        second_place: selected === 1 ? nearby_restaurants[0] : nearby_restaurants[1]
+        second_place: selected === 1 ? nearby_restaurants[1] : nearby_restaurants[0],
       });
     }
     this.setState({

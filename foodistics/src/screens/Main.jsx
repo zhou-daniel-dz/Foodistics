@@ -29,6 +29,10 @@ const STEPS = {
     instructions: `Drag the map to pinpoint your location`,
     submit_button_text: `Looks good`,
   },
+  SELECTING_LOCATION_AGAIN: {
+    instructions: `Try selecting another location. There weren't enough nearby restaurants...`,
+    submit_button_text: `Looks good`,
+  },
   RETRIEVING_RESTAURANTS: {
     instructions: `Retrieving nearby restaurants...`,
     submit_button_text: `This shouldn't exist`,
@@ -69,7 +73,7 @@ class Main extends Component {
 
   getTopPlacesInformation = async () => {
     let google_maps_service = await getGoogleMapsService();
-    let nearby_restaurants = await getNearbyRestaurants(google_maps_service, this.state.location, '1100');
+    let nearby_restaurants = await getNearbyRestaurants(google_maps_service, this.state.location, '1400');
 
     // Sort the nearby restauraunts by rating
     nearby_restaurants = nearby_restaurants.sort(
@@ -139,6 +143,33 @@ class Main extends Component {
           />,
         });
         break;
+      case STEPS.SELECTING_LOCATION_AGAIN:
+        this.setState({
+          showButton: false,
+          showLoading: true,
+          step: STEPS.RETRIEVING_RESTAURANTS,
+        });
+        const nearby_restaurant_info_again = await this.getTopPlacesInformation();
+        if (nearby_restaurant_info_again <= 2) {
+          // Not enough restaurants
+          this.setState({
+            step: STEPS.SELECTING_LOCATION_AGAIN,
+            showButton: true,
+            showLoading: false,
+          });
+          return;
+        }
+        this.setState({
+          step: STEPS.RESTAURANT_TOURNAMENT,
+          showLoading: false,
+          variable_content: <RestaurantTournament
+            onComplete={this.restaurantTournamentComplete}
+            nearby_restaurants={nearby_restaurant_info_again}
+            startLoad={() => this.setState({ showLoading: true })}
+            endLoad={() => this.setState({ showLoading: false })}
+          />,
+        });
+        break;
       case STEPS.SELECTING_LOCATION:
         this.setState({
           showButton: false,
@@ -146,6 +177,15 @@ class Main extends Component {
           step: STEPS.RETRIEVING_RESTAURANTS,
         });
         const nearby_restaurant_info = await this.getTopPlacesInformation();
+        if (nearby_restaurant_info <= 2) {
+          // Not enough restaurants
+          this.setState({
+            step: STEPS.SELECTING_LOCATION_AGAIN,
+            showButton: true,
+            showLoading: false,
+          });
+          return;
+        }
         this.setState({
           step: STEPS.RESTAURANT_TOURNAMENT,
           showLoading: false,
@@ -224,7 +264,7 @@ class Main extends Component {
       alignItems: 'center',
     }}>
       <span style={{ fontSize: 120, userSelect: 'none' }}>Foodistics</span>
-      <div style={{ height: 10, width: 576, marginBottom: 30 }}>
+      <div style={{ height: 10, width: 576, marginBottom: 16 }}>
         {showLoading ? <LinearProgress /> : null}
       </div>
       <span style={{ fontSize: 16, marginBottom: 14, userSelect: 'none' }}>{step.instructions}</span>

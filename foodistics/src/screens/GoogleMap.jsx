@@ -46,7 +46,7 @@ class GoogleMap extends Component {
   renderDirections = () => {
     const { directions, directions_only } = this.props;
     const { directions_renderer } = this.state;
-    if ( directions === null || directions_only === null || directions_renderer === null ) {
+    if ( !directions || !directions_only || !directions_renderer ) {
       return null;
     };
     directions_renderer.setDirections(directions);
